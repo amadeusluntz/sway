@@ -20,8 +20,9 @@ script {
         ret u64 b
     }
 
+
+// check: fn main
     fn main() -> u64 {
-// check: entry:
         entry:
 
 // check: $(arg0=$VAR) = const u64 11
