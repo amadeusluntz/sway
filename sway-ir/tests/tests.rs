@@ -41,6 +41,64 @@ fn ir_to_ir_tests() {
 
 // -------------------------------------------------------------------------------------------------
 
+fn run_tests<F: Fn(&mut sway_ir::Context) -> bool>(sub_dir: &str, opt_fn: F) {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let dir: PathBuf = format!("{}/tests/{}", manifest_dir, sub_dir).into();
+    for entry in std::fs::read_dir(dir).unwrap() {
+        let path = entry.unwrap().path();
+
+        let input_bytes = std::fs::read(&path).unwrap();
+        let input = String::from_utf8_lossy(&input_bytes);
+
+        let chkr = filecheck::CheckerBuilder::new()
+            .text(&input)
+            .unwrap()
+            .finish();
+        assert!(
+            !chkr.is_empty(),
+            "No filecheck directives found in test: {}",
+            path.display()
+        );
+
+        let mut ir = match sway_ir::parser::parse(&input) {
+            Ok(ir) => ir,
+            Err(parse_err) => {
+                println!("{parse_err}");
+                panic!()
+            }
+        };
+
+        assert!(opt_fn(&mut ir));
+
+        let output = sway_ir::printer::to_string(&ir);
+
+        match chkr.explain(&output, filecheck::NO_VARIABLES) {
+            Ok((success, report)) if !success => {
+                println!("--- FILECHECK FAILED FOR {}", path.display());
+                println!("{report}");
+                panic!()
+            }
+            Err(e) => {
+                panic!("filecheck directive error while checking: {e}");
+            }
+            _ => (),
+        }
+    }
+}
+
+#[test]
+fn inline() {
+    run_tests("inline", |ir: &mut sway_ir::Context| {
+        let main_fn = ir
+            .functions
+            .iter()
+            .find_map(|(idx, fc)| if fc.name == "main" { Some(idx) } else { None })
+            .unwrap();
+        sway_ir::optimize::inline_all_function_calls(ir, &sway_ir::function::Function(main_fn))
+            .unwrap()
+    })
+}
+
 fn test_inline(mut path: PathBuf) {
     let input_bytes = std::fs::read(&path).unwrap();
     let input = String::from_utf8_lossy(&input_bytes);
