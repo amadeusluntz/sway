@@ -162,7 +162,7 @@ pub enum CompilationResult {
     },
     Library {
         name: Ident,
-        namespace: Namespace,
+        namespace: Box<Namespace>,
         warnings: Vec<CompileWarning>,
     },
     Failure {
@@ -420,7 +420,7 @@ pub fn ast_to_asm(ast_res: CompileAstResult, build_config: &BuildConfig) -> Comp
                 TreeType::Library { name } => CompilationResult::Library {
                     warnings,
                     name,
-                    namespace: parse_tree.namespace().clone(),
+                    namespace: Box::new(parse_tree.into_namespace()),
                 },
             }
         }
