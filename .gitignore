@@ -17,3 +17,7 @@ sway-lib-std/Forc.lock
 
 # Forc's build directory
 out
+
+# Optional hooks
+.git/hooks/pre-push.d/local_actions.sh
+.git/hooks/pre-push.d/formatting.sh
