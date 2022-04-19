@@ -19,5 +19,5 @@ sway-lib-std/Forc.lock
 out
 
 # Optional hooks
-.git/hooks/pre-push.d/local_actions.sh
-.git/hooks/pre-push.d/formatting.sh
+#.git/hooks/pre-push.d/local_actions.sh
+#.git/hooks/pre-push.d/formatting.sh
